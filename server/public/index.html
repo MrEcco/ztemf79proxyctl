@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" class="min-vh-100">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+		<title>Document</title>
+		<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.2.1/css/bootstrap.min.css"/> -->
+		<link rel="stylesheet" href="css/bootstrap.min.css"/>
+		<style>
+			.-mb-4 {
+				margin-bottom: -1.5rem !important;
+			}
+
+			.disabled {
+				pointer-events: none !important;
+			}
+
+			[v-cloak] {
+				display: none !important;
+			}
+
+			.card.device .badge {
+				text-transform: capitalize !important;
+			}
+		</style>
+	</head>
+	<body class="min-vh-100">
+		<div id="app" class="min-vh-100">
+			<div v-cloak class="d-flex flex-column min-vh-100 pt-4 pb-4">
+				<div class="header mb-5">
+					<div class="container">
+						<nav
+							class="navbar navbar-expand-lg navbar-light bg-light border rounded"
+						>
+							<a class="navbar-brand" href="index.html">Proxy Dashboard</a>
+							<button
+								class="navbar-toggler"
+								type="button"
+								data-toggle="collapse"
+								data-target="#navbarNav"
+								aria-controls="navbarNav"
+								aria-expanded="false"
+								aria-label="Toggle navigation"
+							>
+								<span class="navbar-toggler-icon"></span>
+							</button>
+							<div class="collapse navbar-collapse" id="navbarNav">
+								<ul class="navbar-nav mr-auto">
+									<li class="nav-item">
+										<a class="nav-link" href="#system">System</a>
+									</li>
+									<li class="nav-item">
+										<a class="nav-link" href="#devices">Devices</a>
+									</li>
+								</ul>
+								<button class="btn btn-outline-dark btn-sm" v-on:click="init()">Refresh</button>
+							</div>
+						</nav>
+					</div>
+				</div>
+
+				<div class="main">
+					<div class="container">
+						<div v-if="isLoading" class="alert alert-info mb-4" role="alert">Loading...</div>
+
+						<div v-if="!isLoading">
+
+							<div id="system" class="section mb-4">
+								<div class="card">
+									<div class="card-header bg-light">
+										<h5 class="d-inline-block mb-0">System Status</h5>
+										<span v-bind:class="{ 'badge-success': systemStatus === 'CONNECTED', 'badge-danger': systemStatus === 'DISCONNECTED' }" class="badge badge-pill badge-secondary ml-2"
+										>{{ systemStatus }}</span
+										>
+									</div>
+									<div class="card-body">
+										<button type="button" class="btn btn-outline-danger btn-lg"
+														v-bind:class="{ 'btn-outline-dark disabled': (systemStatus === 'DISCONNECTED' || systemStatus === 'UNKNOWN') }"
+														v-on:click="rebootSystem()">
+											Reboot System
+										</button>
+									</div>
+								</div>
+							</div>
+
+							<div id="devices" class="section mb-5">
+								<div class="card">
+									<div class="card-header bg-light">
+										<h5 class="d-inline">Devices</h5>
+										<span class="badge badge-pill badge-secondary ml-2">{{ status.length }}</span>
+									</div>
+									<div class="card-body">
+										<div class="row -mb-4">
+											<div v-if="status.length === 0">
+												<div class="text-center col-12 mb-4">Not found devices.</div>
+											</div>
+											<div
+												v-for="(item, key, index) in status"
+												class="col-12 col-md-6 col-lg-4 mb-4"
+											>
+												<div class="card device">
+													<div class="card-body">
+														<div class="card-title mb-0">
+															<h5 class="d-inline-block font-weight-light mb-0">
+																Device #{{ item.id }}
+															</h5>
+															<span
+																v-bind:class="{ 'badge-danger': (item.status === 'DISCONNECTED'), 'badge-success': item.status === 'CONNECTED' }"
+																class="badge badge-pill badge-secondary ml-2"
+															>{{ item.status }}</span
+															>
+														</div>
+													</div>
+													<div class="card-footer bg-light">
+														<button
+															type="button"
+															v-bind:class="{ 'btn-outline-dark disabled': (item.status === 'DISCONNECTED' || item.status === 'UNKNOWN') }"
+															class="btn btn-sm btn-outline-danger"
+															v-on:click="stopDevice(item.id)"
+														>
+															Stop
+														</button>
+														<button
+															type="button"
+															v-bind:class="{ 'btn-outline-dark disabled': (item.status === 'CONNECTED' || item.status === 'UNKNOWN') }"
+															class="btn btn-sm btn-outline-success"
+															v-on:click="startDevice(item.id)"
+														>
+															Start
+														</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+						</div>
+
+					</div>
+				</div>
+
+				<div class="footer mt-auto">
+					<div class="container">
+						<div class="text-center text-muted mt-auto">
+							Proxy Dashboard, 2019.<br>
+							Powered by MrEcco and Shmasya.
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.2.1/js/bootstrap.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.22/vue.min.js"></script> -->
+		<script src="js/jquery.min.js"></script>
+		<script src="js/bootstrap.min.js"></script>
+		<script src="js/vue.min.js"></script>
+		<script>
+			var data = {
+				apiUrl: 'http://proxyctl.org',
+				isLoading: true,
+				status: [],
+				systemStatus: 'CONNECTED'
+			};
+
+			var app = new Vue({
+				el: "#app",
+				data: data,
+				methods: {
+					init: function() {
+						var self = this;
+						self.isLoading = true;
+						fetch(this.apiUrl + '/api/status', {
+							method: 'GET'
+						}).then(function(response) {
+							return response.json();
+						}).then(function(data) {
+							self.systemStatus = 'CONNECTED';
+							self.status = data.devices.sort(function(a, b) {
+								return a.id - b.id;
+							});
+							self.isLoading = false;
+						}).catch(function() {
+							self.systemStatus = 'DISCONNECTED';
+							self.status = [];
+							self.isLoading = false;
+						});
+					},
+					hotReload: function() {
+						var self = this;
+						fetch(this.apiUrl + '/api/status', {
+							method: 'GET'
+						}).then(function(response) {
+							return response.json();
+						}).then(function(data) {
+							self.systemStatus = 'CONNECTED';
+							self.status = data.devices.sort(function(a, b) {
+								return a.id - b.id;
+							});
+						}).catch(function() {
+							self.systemStatus = 'DISCONNECTED';
+							self.status = [];
+						});
+					},
+					startDevice: function(device) {
+						var self = this;
+						fetch(this.apiUrl + '/api/start?id=' + device, {
+							method: 'GET'
+						}).then(function(response) {
+							return response.json();
+						}).then(function(data) {
+							self.init();
+						}).catch(function() {
+							self.init();
+						});
+					},
+					stopDevice: function(device) {
+						var self = this;
+						fetch(this.apiUrl + '/api/stop?id=' + device, {
+							method: 'GET'
+						}).then(function(response) {
+							return response.json();
+						}).then(function(data) {
+							self.init();
+						}).catch(function() {
+							self.init();
+						});
+					},
+					rebootSystem: function() {
+						var self = this;
+						fetch(this.apiUrl + '/api/restart', {
+							method: 'GET'
+						}).then(function(response) {
+							return response.json();
+						}).then(function(data) {
+							self.init();
+						}).catch(function() {
+							self.init();
+						});
+					}
+				},
+				mounted: function() {
+					var self = this;
+					self.init();
+					setInterval(function() {
+						self.hotReload();
+					}, 5000);
+				}
+			});
+		</script>
+	</body>
+</html>

@@ -1,0 +1,40 @@
+source-directory /etc/network/interfaces.d
+
+auto eth0
+iface eth0 inet static
+#    address 192.168.1.231
+#    netmask 255.255.255.0
+#    gateway 192.168.1.1
+#    dns-nameservers 1.1.1.1 8.8.8.8
+    address 10.55.55.1
+    netmask 255.255.255.0
+
+allow-hotplug eth1
+iface eth1 inet dhcp
+    post-up /usr/bin/python3 -u /etc/network/ifupdown.py eth1 up
+    post-down /usr/bin/python3 -u /etc/network/ifupdown.py eth1 down
+
+allow-hotplug eth2
+iface eth2 inet dhcp
+    post-up /usr/bin/python3 -u /etc/network/ifupdown.py eth2 up
+    post-down /usr/bin/python3 -u /etc/network/ifupdown.py eth2 down
+
+allow-hotplug eth3
+iface eth3 inet dhcp
+    post-up /usr/bin/python3 -u /etc/network/ifupdown.py eth3 up
+    post-down /usr/bin/python3 -u /etc/network/ifupdown.py eth3 down
+
+allow-hotplug eth4
+iface eth4 inet dhcp
+    post-up /usr/bin/python3 -u /etc/network/ifupdown.py eth4 up
+    post-down /usr/bin/python3 -u /etc/network/ifupdown.py eth4 down
+
+allow-hotplug eth5
+iface eth5 inet dhcp
+    post-up /usr/bin/python3 -u /etc/network/ifupdown.py eth5 up
+    post-down /usr/bin/python3 -u /etc/network/ifupdown.py eth5 down
+
+allow-hotplug eth6
+iface eth6 inet dhcp
+    post-up /usr/bin/python3 -u /etc/network/ifupdown.py eth6 up
+    post-down /usr/bin/python3 -u /etc/network/ifupdown.py eth6 down
